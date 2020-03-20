@@ -1,0 +1,211 @@
+---
+title: "Logistic Regression"
+author: "Calvin Skalla"
+date: "3/20/2020"
+output: html_document
+---
+
+# Data Exploration and Cleaning
+```{r}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(ggthemes)
+library(cowplot)
+white_wine <- read.csv("data/winequality-white.csv", sep = ";")
+red_wine <- read.csv("data/winequality-red.csv", sep = ";")
+wine_data <- rbind(white_wine, red_wine)
+WW_LR_data <- mutate(white_wine, like = as.factor(ifelse(quality >5, "good", "bad"))) %>% select(-quality)
+RW_LR_data <- mutate(red_wine, like = as.factor(ifelse(quality >5, "good", "bad"))) %>% select(-quality)
+white_wine_factor <- mutate(white_wine, quality2 = as.factor(quality))
+```
+
+# First model for LR (White Wine) 
+## Used full dataset to build model
+```{r}
+WW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
+             + residual.sugar + chlorides + free.sulfur.dioxide 
+             + total.sulfur.dioxide + density + pH + sulphates
+             + alcohol, data = WW_LR_data, family = binomial)
+
+#RW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide  + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = RW_LR_data, family = binomial)
+
+#summary(RW.LR.fit)
+#plot(WW.LR.fit)
+#RW.LR.probs = predict(RW.LR.fit, type = "response")
+#RW.LR.pred = rep("bad", 4898)
+#RW.LR.pred[RW.LR.probs>0.5] = "good"
+#table(RW.LR.pred, RW_LR_data$like)
+#mean(RW.LR.pred==RW_LR_data$like)
+
+#summary(WW.LR.fit)
+#plot(WW.LR.fit)
+WW.LR.probs = predict(WW.LR.fit, type = "response")
+WW.LR.pred = rep("bad", 4898)
+WW.LR.pred[WW.LR.probs>0.5] = "good"
+table(WW.LR.pred, WW_LR_data$like)
+mean(WW.LR.pred==WW_LR_data$like)
+#0.7501
+```
+Correlations
+residual.sugar~density = Correlation of 0.84
+total.sulfur.dioxide~free.sulfur.dioxide = correlation of 0.62
+total.sulfur.dioxide~density = correlation of 0.53
+density~alcohol = correlation of -0.78
+
+Order of Correlation for Quality
+alcohol 
+density
+chlorides
+volatile.acidity
+total sulfur
+fixed acidity
+pH
+residual sugar
+sulphates
+citric acid
+free sulfur
+
+# Second Model 
+## First Model Shrunk w/ with Significant Variables Only
+```{r}
+LR.fit2 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+                density + pH + sulphates + alcohol, data = LR_data, family = binomial)
+#summary(LR.fit2)
+#plot(LR.fit2)
+LR.probs2 = predict(LR.fit2, type = "response")
+LR.pred2 = rep("bad", 4898)
+LR.pred2[LR.probs2>0.5] = "good"
+table(LR.pred2, LR_data$like)
+mean(LR.pred2==LR_data$like)
+#0.74989
+```
+
+# Third Model
+## Second Model with Significant Variables minus Colinearity
+```{r}
+LR.fit3 = glm(like ~ alcohol + free.sulfur.dioxide + volatile.acidity + 
+                residual.sugar + pH + sulphates, data = LR_data, family = binomial)
+#summary(LR.fit3)
+#plot(LR.fit3)
+LR.probs3 = predict(LR.fit3, type = "response")
+LR.pred3 = rep("bad", 4898)
+LR.pred3[LR.probs3>0.5] = "good"
+table(LR.pred3, LR_data$like)
+mean(LR.pred3==LR_data$like)
+#0.7523
+```
+
+# Subset Selection
+```{r}
+library(leaps)
+regfit.full = regsubsets(like ~ ., LR_data, nvmax = 19)
+reg.summary = summary(regfit.full)
+par(mfrow = c(2,2))
+plot(reg.summary$rss ,xlab = "Number of Variables ", ylab = "RSS",
+     type = "l") + points(which.min(reg.summary$rss),
+                          reg.summary$rss[which.min(reg.summary$rss)], 
+                          col = "red", cex = 2, pch = 20)
+
+plot(reg.summary$adjr2 ,xlab = "Number of Variables ", 
+     ylab = "Adjusted RSq", type = "l") + points(which.max(reg.summary$adjr2), 
+                                  reg.summary$adjr2[which.max(reg.summary$adjr2)], 
+                                  col = "red", cex = 2, pch = 20)
+
+plot(reg.summary$cp ,xlab = "Number of Variables ", ylab = "Cp", 
+     type = "l" ) + points(which.min(reg.summary$cp), 
+                           reg.summary$cp[which.min(reg.summary$cp)], col = "red", 
+                           cex = 2, pch = 20)
+
+plot(reg.summary$bic ,xlab = "Number of Variables ", ylab = "BIC", 
+     type = "l") + points(which.min(reg.summary$bic), 
+                    reg.summary$bic[which.min(reg.summary$bic)], col = "red", 
+                    cex = 2, pch = 20)
+
+plot(regfit.full ,scale="r2")
+plot(regfit.full ,scale="adjr2")
+plot(regfit.full ,scale="Cp")
+plot(regfit.full ,scale="bic")
+coef(regfit.full, 6)
+reg.summary$bic
+
+```
+
+# Minimal BIC Model
+## Same as Model Shrunk w/ with Significant Variables Only
+```{r}
+LR.BIC7 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+                density + pH + sulphates + alcohol , data = LR_data, family =
+                binomial)
+#summary(LR.fit4)
+#plot(LR.fit4)
+LR.probs4 = predict(LR.BIC7, type = "response")
+LR.pred4 = rep("bad", 4898)
+LR.pred4[LR.probs4>0.5] = "good"
+table(LR.pred4, LR_data$like)
+mean(LR.pred4==LR_data$like)
+#0.7498
+```
+
+# Second Lowest BIC Model
+```{r}
+LR.BIC6 = glm(like ~ volatile.acidity + residual.sugar + density + pH + 
+                sulphates + alcohol, data = LR_data, family =binomial)
+#summary(LR.fit4)
+#plot(LR.fit4)
+LR.probsBIC = predict(LR.BIC6, type = "response")
+LR.predBIC = rep("bad", 4898)
+LR.predBIC[LR.probsBIC>0.5] = "good"
+table(LR.predBIC, LR_data$like)
+mean(LR.predBIC==LR_data$like)
+#0.7533
+```
+
+# Handmade Model from Assumptions drawn from BIC graph
+```{r}
+LR.fit5 = glm(like ~ volatile.acidity + residual.sugar + alcohol, data = LR_data, 
+              family = binomial)
+#summary(LR.fit4)
+#plot(LR.fit5)
+LR.probs5 = predict(LR.fit5, type = "response")
+LR.pred5 = rep("bad", 4898)
+LR.pred5[LR.probs5>0.5] = "good"
+table(LR.pred5, LR_data$like)
+mean(LR.pred5==LR_data$like)
+#0.7545
+```
+
+# Forward and Backward Stepwise Selection
+## Produced same results as Best Subset Selection for minimum BIC
+```{r}
+regfit.fwd = regsubsets(like ∼ ., data = LR_data , nvmax = 19, method ="forward")
+coef(regfit.fwd, 6)
+
+regfit.bwd = regsubsets(like ∼ ., data = LR_data , nvmax = 19, method ="backward")
+coef(regfit.bwd, 7)
+```
+
+
+# Second model for LR 
+## Used first half to build
+file:///C:/Users/calvi/OneDrive/Documents/Textbooks/Statistical%20Learning.pdf 
+Page 159
+```{r}
+set.seed(12)
+likedata <- LR_data$like
+traindata <- likedata[1:3000,]
+LRtrain = LR_data[!traindata,]
+
+LR.fit2 = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
+             + residual.sugar + chlorides + free.sulfur.dioxide 
+             + total.sulfur.dioxide + density + pH + sulphates
+             + alcohol, data = LR_data, family = binomial, subset = traindata)
+```
+
+# Cross Validation
+```{r}
+set.seed(13)
+train = sample(4898, 2449)
+lm.fit = lm(quality~alcohol, data = white_wine, subset = train)
+
+```

@@ -1,0 +1,103 @@
+---
+title: "Initial Exploration w/ Graphs"
+author: "Calvin Skalla"
+date: "3/20/2020"
+output: html_document
+---
+# Data Exploration and Cleaning
+```{r}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(ggthemes)
+library(cowplot)
+library(ggridges)
+white_wine <- read.csv("data/winequality-white.csv", sep = ";")
+red_wine <- read.csv("data/winequality-red.csv", sep = ";")
+wine_data <- rbind(white_wine, red_wine)
+LR_data <- mutate(white_wine, like = as.factor(ifelse(quality >5, "good", "bad"))) %>% select(-quality)
+white_wine_factor <- mutate(white_wine, quality2 = as.factor(quality))
+```
+
+# Distributions of Variables
+```{r, echo=FALSE}
+ww_hist <- ggplot(white_wine) + geom_histogram(aes(x = quality))
+rw_hist <- ggplot(red_wine) + geom_histogram(aes(x = quality))
+ww_dist <- count(white_wine, quality)
+rw_dist <- count(red_wine, quality)
+wine_dist <- merge(ww_dist, rw_dist, by = "quality", all.x = TRUE)
+kbl <- knitr::kable(wine_dist, format = "html")
+kableExtra::kable_styling(kbl, full_width = FALSE)
+hist(LR_data$fixed.acidity)
+hist(LR_data$volatile.acidity)
+hist(LR_data$citric.acid)
+hist(LR_data$residual.sugar)
+hist(LR_data$chlorides)
+hist(LR_data$free.sulfur.dioxide)
+hist(LR_data$total.sulfur.dioxide)
+hist(LR_data$density)
+hist(LR_data$pH)
+hist(LR_data$sulphates)
+hist(LR_data$alcohol)
+
+```
+
+Quality ~ volatile.acidity + residual.sugar + alcohol
+# Start of Graphing - Faceted Histograms
+```{r}
+gg <- ggplot(white_wine_factor) + geom_point(aes(x = alcohol, y = quality2, color = residual.sugar), size = 0.2, position = "jitter")
+gg
+gg2 <- ggplot(white_wine_factor) + geom_density(aes(x = residual.sugar, fill = quality2)) + facet_wrap(~quality2)
+gg2
+gg3 <- ggplot(white_wine_factor) + geom_density(aes(x = alcohol, color = quality2)) + facet_wrap(~quality2)
+gg3
+gg4 <- ggplot(white_wine_factor) + geom_density(aes(x = volatile.acidity, color = quality2)) + facet_wrap(~quality2)
+gg4
+```
+
+# Density Ridges Graphs
+## Using quality data
+```{r}
+gg5 <- ggplot(white_wine_factor) + geom_density_ridges(aes(x = volatile.acidity, y = quality2))
+gg5
+gg6 <- ggplot(white_wine_factor) + geom_density_ridges(aes(x = alcohol, y = quality2))
+gg6
+gg7 <- ggplot(white_wine_factor) + geom_density_ridges(aes(x = residual.sugar, y = quality2))
+gg7
+```
+
+## Using like data
+```{r}
+gg8 <- ggplot(LR_data) + geom_density(aes(x = alcohol, fill = like), alpha = 0.2)
+gg8
+gg9 <-ggplot(LR_data) + geom_density(aes(x = volatile.acidity, fill = like), alpha = 0.2)
+gg9
+gg10 <- ggplot(LR_data) + geom_density(aes(x = residual.sugar, fill = like), alpha = 0.2)
+gg10
+```
+
+
+```{r}
+gplot <- ggplot(white_wine_factor, aes(x = volatile.acidity, y = residual.sugar, color = alcohol)) + geom_point(data = white_wine, color = "grey80") + geom_point(size = 2.5) + facet_wrap(~quality2)
+gplot
+```
+
+
+# Boxplots
+```{r}
+bp1 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = pH))
+bp2 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = density))
+bp3 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = alcohol))
+bp4 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = sulphates))
+bp5 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = total.sulfur.dioxide))
+bp6 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = free.sulfur.dioxide))
+bp7 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = chlorides))
+bp8 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = residual.sugar))
+bp9 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = citric.acid))
+bp10 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = volatile.acidity))
+bp11 <- ggplot(white_wine_factor) + geom_boxplot(aes(x = quality2, y = fixed.acidity))
+plot_grid(bp1, bp2, bp3, bp4, bp5, bp6, bp7, bp8, bp9, bp10, bp11, ncol = 3)
+
+```
+
+
