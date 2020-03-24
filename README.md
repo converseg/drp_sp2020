@@ -6,3 +6,6 @@ To get started with git (if you've never used it before), this website gives a p
 https://rogerdudler.github.io/git-guide/
 
 I make an edit on 3/24
+
+
+More edits
