@@ -2,7 +2,9 @@
 title: "Logistic Regression"
 author: "Calvin Skalla"
 date: "3/20/2020"
-output: html_document
+output: 
+  html_document: 
+    self_contained: no
 ---
 
 # Data Exploration and Cleaning
@@ -17,16 +19,21 @@ red_wine <- read.csv("data/winequality-red.csv", sep = ";")
 wine_data <- rbind(white_wine, red_wine)
 WW_LR_data <- mutate(white_wine, like = as.factor(ifelse(quality >5, "good", "bad"))) %>% select(-quality)
 RW_LR_data <- mutate(red_wine, like = as.factor(ifelse(quality >5, "good", "bad"))) %>% select(-quality)
-white_wine_factor <- mutate(white_wine, quality2 = as.factor(quality))
+
+w_train_index <- sample(1:nrow(WW_LR_data), 0.8 * nrow(WW_LR_data))
+w_test_index <- setdiff(1:nrow(WW_LR_data), w_train_index)
+
+w_train <- WW_LR_data[w_train_index, ]
+w_test <- WW_LR_data[w_test_index, ]
 ```
 
 # First model for LR (White Wine) 
-### Used full dataset to build model
+### Used every feature available to build model while training on a 80% subset of the original dataset and tested on the remaining 20%
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 WW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
              + residual.sugar + chlorides + free.sulfur.dioxide 
              + total.sulfur.dioxide + density + pH + sulphates
-             + alcohol, data = WW_LR_data, family = binomial)
+             + alcohol, data = w_train, family = binomial)
 
 #RW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide  + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = RW_LR_data, family = binomial)
 
@@ -39,13 +46,12 @@ WW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
 #mean(RW.LR.pred==RW_LR_data$like)
 
 #summary(WW.LR.fit)
-#plot(WW.LR.fit)
-WW.LR.probs = predict(WW.LR.fit, type = "response")
-WW.LR.pred = rep("bad", 4898)
+plot(WW.LR.fit)
+WW.LR.probs = predict(WW.LR.fit, w_test, type = "response")
+WW.LR.pred = rep("bad", 980)
 WW.LR.pred[WW.LR.probs>0.5] = "good"
-table(WW.LR.pred, WW_LR_data$like)
-mean(WW.LR.pred==WW_LR_data$like)
-#0.7501
+table(WW.LR.pred, w_test$like)
+mean(WW.LR.pred==w_test$like)
 ```
 
 # Second Model 
