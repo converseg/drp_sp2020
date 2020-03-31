@@ -5,9 +5,8 @@ date: "3/20/2020"
 output: html_document
 ---
 
-new comment 
 # Data Exploration and Cleaning
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 library(knitr)
@@ -22,8 +21,8 @@ white_wine_factor <- mutate(white_wine, quality2 = as.factor(quality))
 ```
 
 # First model for LR (White Wine) 
-## Used full dataset to build model
-```{r}
+### Used full dataset to build model
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 WW.LR.fit = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
              + residual.sugar + chlorides + free.sulfur.dioxide 
              + total.sulfur.dioxide + density + pH + sulphates
@@ -48,59 +47,41 @@ table(WW.LR.pred, WW_LR_data$like)
 mean(WW.LR.pred==WW_LR_data$like)
 #0.7501
 ```
-Correlations
-residual.sugar~density = Correlation of 0.84
-total.sulfur.dioxide~free.sulfur.dioxide = correlation of 0.62
-total.sulfur.dioxide~density = correlation of 0.53
-density~alcohol = correlation of -0.78
-
-Order of Correlation for Quality
-alcohol 
-density
-chlorides
-volatile.acidity
-total sulfur
-fixed acidity
-pH
-residual sugar
-sulphates
-citric acid
-free sulfur
 
 # Second Model 
 ## First Model Shrunk w/ with Significant Variables Only
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.fit2 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
-                density + pH + sulphates + alcohol, data = LR_data, family = binomial)
+                density + pH + sulphates + alcohol, data = WW_LR_data, family = binomial)
 #summary(LR.fit2)
 #plot(LR.fit2)
 LR.probs2 = predict(LR.fit2, type = "response")
 LR.pred2 = rep("bad", 4898)
 LR.pred2[LR.probs2>0.5] = "good"
-table(LR.pred2, LR_data$like)
-mean(LR.pred2==LR_data$like)
+table(LR.pred2, WW_LR_data$like)
+mean(LR.pred2==WW_LR_data$like)
 #0.74989
 ```
 
 # Third Model
 ## Second Model with Significant Variables minus Colinearity
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.fit3 = glm(like ~ alcohol + free.sulfur.dioxide + volatile.acidity + 
-                residual.sugar + pH + sulphates, data = LR_data, family = binomial)
+                residual.sugar + pH + sulphates, data = WW_LR_data, family = binomial)
 #summary(LR.fit3)
 #plot(LR.fit3)
 LR.probs3 = predict(LR.fit3, type = "response")
 LR.pred3 = rep("bad", 4898)
 LR.pred3[LR.probs3>0.5] = "good"
-table(LR.pred3, LR_data$like)
-mean(LR.pred3==LR_data$like)
+table(LR.pred3, WW_LR_data$like)
+mean(LR.pred3==WW_LR_data$like)
 #0.7523
 ```
 
 # Subset Selection
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(leaps)
-regfit.full = regsubsets(like ~ ., LR_data, nvmax = 19)
+regfit.full = regsubsets(like ~ ., WW_LR_data, nvmax = 19)
 reg.summary = summary(regfit.full)
 par(mfrow = c(2,2))
 plot(reg.summary$rss ,xlab = "Number of Variables ", ylab = "RSS",
@@ -132,81 +113,60 @@ reg.summary$bic
 
 ```
 
-# Minimal BIC Model
-## Same as Model Shrunk w/ with Significant Variables Only
-```{r}
+# Fourth Model
+## Minimal BIC Model
+## Same as Second Model
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.BIC7 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
-                density + pH + sulphates + alcohol , data = LR_data, family =
+                density + pH + sulphates + alcohol , data = WW_LR_data, family =
                 binomial)
 #summary(LR.fit4)
 #plot(LR.fit4)
 LR.probs4 = predict(LR.BIC7, type = "response")
 LR.pred4 = rep("bad", 4898)
 LR.pred4[LR.probs4>0.5] = "good"
-table(LR.pred4, LR_data$like)
-mean(LR.pred4==LR_data$like)
+table(LR.pred4, WW_LR_data$like)
+mean(LR.pred4==WW_LR_data$like)
 #0.7498
 ```
 
-# Second Lowest BIC Model
-```{r}
+# Fifth Model
+## Second Lowest BIC Model
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.BIC6 = glm(like ~ volatile.acidity + residual.sugar + density + pH + 
-                sulphates + alcohol, data = LR_data, family =binomial)
+                sulphates + alcohol, data = WW_LR_data, family =binomial)
 #summary(LR.fit4)
 #plot(LR.fit4)
 LR.probsBIC = predict(LR.BIC6, type = "response")
 LR.predBIC = rep("bad", 4898)
 LR.predBIC[LR.probsBIC>0.5] = "good"
-table(LR.predBIC, LR_data$like)
-mean(LR.predBIC==LR_data$like)
+table(LR.predBIC, WW_LR_data$like)
+mean(LR.predBIC==WW_LR_data$like)
 #0.7533
 ```
 
-# Handmade Model from Assumptions drawn from BIC graph
-```{r}
-LR.fit5 = glm(like ~ volatile.acidity + residual.sugar + alcohol, data = LR_data, 
+# Sixth Model
+## Handmade Model from Assumptions drawn from BIC graph
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+LR.fit5 = glm(like ~ volatile.acidity + residual.sugar + alcohol, data = WW_LR_data, 
               family = binomial)
 #summary(LR.fit4)
 #plot(LR.fit5)
 LR.probs5 = predict(LR.fit5, type = "response")
 LR.pred5 = rep("bad", 4898)
 LR.pred5[LR.probs5>0.5] = "good"
-table(LR.pred5, LR_data$like)
-mean(LR.pred5==LR_data$like)
+table(LR.pred5, WW_LR_data$like)
+mean(LR.pred5==WW_LR_data$like)
 #0.7545
 ```
 
 # Forward and Backward Stepwise Selection
 ## Produced same results as Best Subset Selection for minimum BIC
-```{r}
-regfit.fwd = regsubsets(like ∼ ., data = LR_data , nvmax = 19, method ="forward")
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+regfit.fwd = regsubsets(like ∼ ., data = WW_LR_data , nvmax = 19, method ="forward")
 coef(regfit.fwd, 6)
 
-regfit.bwd = regsubsets(like ∼ ., data = LR_data , nvmax = 19, method ="backward")
+regfit.bwd = regsubsets(like ∼ ., data = WW_LR_data , nvmax = 19, method ="backward")
 coef(regfit.bwd, 7)
 ```
 
-
-# Second model for LR 
-## Used first half to build
-file:///C:/Users/calvi/OneDrive/Documents/Textbooks/Statistical%20Learning.pdf 
-Page 159
-```{r}
-set.seed(12)
-likedata <- LR_data$like
-traindata <- likedata[1:3000,]
-LRtrain = LR_data[!traindata,]
-
-LR.fit2 = glm(like ~ fixed.acidity + volatile.acidity + citric.acid
-             + residual.sugar + chlorides + free.sulfur.dioxide 
-             + total.sulfur.dioxide + density + pH + sulphates
-             + alcohol, data = LR_data, family = binomial, subset = traindata)
-```
-
-# Cross Validation
-```{r}
-set.seed(13)
-train = sample(4898, 2449)
-lm.fit = lm(quality~alcohol, data = white_wine, subset = train)
-
-```
