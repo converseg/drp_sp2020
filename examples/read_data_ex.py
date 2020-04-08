@@ -40,8 +40,7 @@ for i in range(n):
 	if float(data[i][-1]) >= 6: Y[i] = 1 # good wines are calssified as 1
 	else: Y[i] = 0 # bad wines are classified as 0
 	for j in range(d-1):
-		if j != 10 and j != 15:
-			X[i,j] = float(data[i][j])
+		X[i,j] = float(data[i][j])
 
 # TODO: should probably rescale/normalize each feature to be on the same scale
 
