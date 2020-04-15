@@ -28,7 +28,7 @@ red_wine <- read.csv("data/winequality-red.csv", sep = ";")
 #Combining and clarifying the red vs white
 wine_data <- rbind(white_wine, red_wine) %>% tibble::rowid_to_column("ID") %>% mutate(Type = ifelse(ID <= 4898, 1, 0)) %>% select(-ID)
 
-#normalizing daata
+#normalizing data
 preproc2 <- preProcess(wine_data, method = c("range"))
 w_data_minmax <- predict(preproc2, wine_data)
 
@@ -37,24 +37,19 @@ train_index <- sample(1:nrow(w_data_minmax), 0.8 * nrow(w_data_minmax))
 test_index <- setdiff(1:nrow(w_data_minmax), train_index)
 train <- w_data_minmax[train_index, ]
 test <- w_data_minmax[test_index, ]
+count(train$Type)
+count(test$Type)
 ```
 
-# Ridge Regression
+# First Model
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
-```
-
-
-# First Model with all available Variables
-## Using a 80/20 training/testing split w/ non-normalized variables
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#All available variables
 first_mod = glm(Type ~ fixed.acidity + volatile.acidity + citric.acid
              + residual.sugar + chlorides + free.sulfur.dioxide 
              + total.sulfur.dioxide + density + pH + sulphates
              + alcohol, data = train, family = binomial)
 
 summary(first_mod)
-plot(first_mod)
 
 first_probs = predict(first_mod, test, type = "response")
 first_pred = rep(0, 1300)
@@ -63,7 +58,29 @@ table(first_pred, test$Type)
 mean(first_pred==test$Type)
 ```
 
-```{r}
+# Second Model
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Only significant variables
+second_mod = glm(Type ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + sulphates + alcohol, data = train, family = binomial)
 
+summary(second_mod)
+second_probs = predict(second_mod, test, type = "response")
+second_pred = rep(0, 1300)
+second_pred[second_probs>0.5] = 1
+table(second_pred, test$Type)
+mean(second_pred==test$Type)
+```
+
+# Third Model
+```{r}
+third_mod = glm(Type ~ total.sulfur.dioxide, data = train, family = binomial)
+
+summary(third_mod)
+
+third_probs = predict(third_mod, test, type = "response")
+third_pred = rep(0, 1300)
+third_pred[third_probs>0.5] = 1
+table(third_pred, test$Type)
+mean(third_pred==test$Type)
 ```
 
