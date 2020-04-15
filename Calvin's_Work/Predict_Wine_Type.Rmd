@@ -19,17 +19,29 @@ library(readr)
 library(GGally)
 library(mlbench)
 library(caret)
+library(glmnet)
 
+#Reading in the Wine
 white_wine <- read.csv("data/winequality-white.csv", sep = ";")
-
 red_wine <- read.csv("data/winequality-red.csv", sep = ";")
 
+#Combining and clarifying the red vs white
 wine_data <- rbind(white_wine, red_wine) %>% tibble::rowid_to_column("ID") %>% mutate(Type = ifelse(ID <= 4898, 1, 0)) %>% select(-ID)
 
-train_index <- sample(1:nrow(wine_data), 0.8 * nrow(wine_data))
-test_index <- setdiff(1:nrow(wine_data), train_index)
-train <- wine_data[train_index, ]
-test <- wine_data[test_index, ]
+#normalizing daata
+preproc2 <- preProcess(wine_data, method = c("range"))
+w_data_minmax <- predict(preproc2, wine_data)
+
+#Splitting data into train/test
+train_index <- sample(1:nrow(w_data_minmax), 0.8 * nrow(w_data_minmax))
+test_index <- setdiff(1:nrow(w_data_minmax), train_index)
+train <- w_data_minmax[train_index, ]
+test <- w_data_minmax[test_index, ]
+```
+
+# Ridge Regression
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
 ```
 
 
@@ -43,9 +55,15 @@ first_mod = glm(Type ~ fixed.acidity + volatile.acidity + citric.acid
 
 summary(first_mod)
 plot(first_mod)
+
 first_probs = predict(first_mod, test, type = "response")
 first_pred = rep(0, 1300)
 first_pred[first_probs>0.5] = 1
 table(first_pred, test$Type)
 mean(first_pred==test$Type)
 ```
+
+```{r}
+
+```
+
