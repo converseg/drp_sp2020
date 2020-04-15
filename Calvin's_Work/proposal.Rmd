@@ -1,0 +1,97 @@
+---
+title: "Revealing What Quantity of Physiochemicals Produce a High Quality Wine"
+author: "Rhedt Roelandt, Calvin Skalla, and Cory Skeers"
+date: "3/21/2020"
+output: html_document
+---
+### Exploring Red and White Wine Data from Portugal
+For this data visualization project, We will look at an array of wine samples. 
+Each sample was given a quality rating from 1-10, and our goal will be to create visualizations demonstrating what levels of certain physiochemicals produce a high quality wine. Along with that, we will analyze the differences between the red and white wines to design plots that can simply reveal their distinctions. 
+  
+### Features of the Wine
+For generating our visualizations for this project, we will be using a data set from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Wine+Quality). Thankfully, this data was mined and assembled for public use by P. Cortez, A. Cerdeira, F. Almeida, T. Matos, and J. Reis. These datasets were made available to be used for regression and classification tasks: but along with that, can be used with feature selection methods to determine which variables are important in producing a high quality wine.
+  
+```{r, echo=FALSE, message=FALSE}
+#Importing White Wine and Wrangling
+library(knitr)
+library(dplyr)
+library(ggplot2)
+library(rmarkdown)
+library(kableExtra)
+white_raw <- read.csv("data/winequality-white.csv", sep = ";")
+colnames(white_raw) = c("Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol", "Quality")
+white <- white_raw[, c(12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)]
+w_mean_seq <- round(colMeans(white), digits = 2)
+Sample_Number_w <- c((1:4898), "Means")
+white_w_mean <- rbind(white, w_mean_seq) %>% cbind(Sample_Number_w) 
+white_w_mean_num <- white_w_mean[, c(13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)]
+colnames(white_w_mean_num) = c("Sample Number", "Quality","Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol")
+```
+
+```{r, include=FALSE, message=FALSE}
+#Importing Red Wine and Wrangling
+red_raw <- read.csv("data/winequality-red.csv", sep = ";")
+colnames(red_raw) = c("Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol", "Quality")
+red <- red_raw[, c(12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)]
+r_mean_seq <- round(colMeans(red), digits = 2)
+Sample_Number_r <- c((1:1599), "Means")
+red_w_mean <- rbind(red, r_mean_seq) %>% cbind(Sample_Number_r)
+red_w_mean_num <- red_w_mean[, c(13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)]
+colnames(red_w_mean_num) = c("Sample Number", "Quality","Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol")
+summary(white$Density)
+```
+    
+Variable               Description
+--------               -----------
+`Sample Number`        Number given to each invdividual wine sample
+`Quality`              Rating score on the quality of wine from 1-10
+`Fixed Acidity`        Amount of acid from the grapes in grams per liter
+`Volatile Acidity`     Amount of distillable acid in the wine in grams per liter
+`Citric Acid`          Amount of citric acid present to add flavor in grams per liter
+`Residual Sugar`       Leftover sugar from grapes after alcohol fermentation in grams per liter
+`Chlorides`            Amount of salt in the wine in grams per liter
+`Free Sulfur Dioxide`  Amount of $SO_2$ not bound to other molecules in milligrams per liter
+`Total Sulfur Dioxide` Portion of free $SO_2$ plus the portion bounded to the other chemicals in milligrams per liter
+`Density`              Mass of dissolved solids per volume in grams/$cm^3$ 
+`pH`                   Measure of relative acidity vs. relative alkalinity of any liquid on a scale from 0-14
+`sulfites`             Amount of preservative ($SO_2$) for antioxidant and antibacterial properties in grams per liter
+`Alcohol`              Percent of alcohol content in the wine sample
+--------               ------------
+***
+
+> <details>
+  <summary> Correlation of each variable with Quality </summary>
+```{r, echo=FALSE, message=FALSE}
+#Correlation of Variables Table
+cor_seq <- cor(x = red_raw[,1:11], y = red_raw$Quality)
+colnames(cor_seq) = c("Correlation")
+variables = c("Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol")
+
+levels_of_significance = c("(+)", "(- - -)", "(++)", "NSF", "(-)", "NSF", "(-)", "(-)", "NSF", "(++)", "(+++)")
+
+cor_data_frame <- data.frame("Variables" = variables, "Correlation" = cor_seq, "Significance" = levels_of_significance)
+cor_data_frame <- cor_data_frame[order(-cor_data_frame$Correlation),]
+
+cor_kbl <- kable(cor_data_frame, align = "lcc", caption = "Correlation of each variable with Quality", row.names = F) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", fixed_thead = T), full_width = F) %>% row_spec(11, hline_after = T) %>% footnote(number = c("(+) refers to having a positive correlation with quality", "NSF refers to not having a sufficient correlation with quality", "(-) refers to having negative correlation with quality"))
+cor_kbl
+```
+</details>
+
+### Expand the White or Red Datasets below
+> <details>
+  <summary> White Wine Dataset </summary>
+```{r, echo=FALSE, message=FALSE, eval=TRUE}
+# Table for White Wine Dataset
+w_kbl <- kable(white_w_mean_num[c(sample(1:4898, 10), 4899), ], align = "lllcccccccrr", caption = "White Wine Quality Dataset", row.names = F) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", fixed_thead = T)) %>% column_spec(2, bold = T, border_right = T, border_left = T, background = "yellow") %>% row_spec(11, bold = T, color = "white", background = "black", hline_after = T)  %>% footnote(symbol = c("10 random white wines chosen from the 4898 samples with the means of the dataset calculated at the bottom"))
+w_kbl
+```
+</details>
+
+> <details>
+  <summary> Red Wine Dataset </summary>
+```{r, echo=FALSE, message=FALSE}
+# Table for Red Wine Dataset
+r_kbl <- kable(red_w_mean_num[c(sample(1:1599, 10), 1600), ], align = "lllcccccccrr", caption = "Red Wine Quality Dataset", row.names = F) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", fixed_thead = T)) %>% column_spec(2, bold = T, border_right = T, border_left = T, background = "yellow") %>% row_spec(11, bold = T, color = "white", background = "black", hline_after = T)  %>% footnote(symbol = c("10 random red wines chosen from the 1599 samples with the means of the dataset calculated at the bottom"))
+r_kbl
+```
+</details>
