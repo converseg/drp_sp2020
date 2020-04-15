@@ -14,56 +14,43 @@ library(dplyr)
 library(knitr)
 library(ggthemes)
 library(cowplot)
+library(plyr)
+library(readr)
+library(GGally)
+library(mlbench)
+library(caret)
 
+#Reading in Data
 white_wine <- read.csv("data/winequality-white.csv", sep = ";")
 red_wine <- read.csv("data/winequality-red.csv", sep = ";")
-wine_data <- rbind(white_wine, red_wine)
-WW_LR_data <- mutate(white_wine, like = as.factor(ifelse(quality >5, 1, 0))) %>% select(-quality)
-RW_LR_data <- mutate(red_wine, like = as.factor(ifelse(quality >5, 1, 0))) %>% select(-quality)
 
-w_train_index <- sample(1:nrow(WW_LR_data), 0.8 * nrow(WW_LR_data))
-w_test_index <- setdiff(1:nrow(WW_LR_data), w_train_index)
+#Creating Binomial Like Variable 1 = good, 0 = bad
+WW_LR_data <- mutate(white_wine, like = as.factor(ifelse(quality >5, 1, 0))) %>% select(-quality) 
 
-w_train <- WW_LR_data[w_train_index, ]
-w_test <- WW_LR_data[w_test_index, ]
+#Normalizing data with minmax
+preproc2 <- preProcess(WW_LR_data, method = c("range"))
+ww_data_minmax <- predict(preproc2, WW_LR_data)
+
+#Splitting normalized data
+w_train_index <- sample(1:nrow(ww_data_minmax), 0.8 * nrow(ww_data_minmax))
+w_test_index <- setdiff(1:nrow(ww_data_minmax), w_train_index)
+w_train <- ww_data_minmax[w_train_index, ]
+w_test <- ww_data_minmax[w_test_index, ]
 ```
 
-# Subset Selection w/ full Dataset
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Subset Selection w/ minmax data
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 library(leaps)
-regfit.full = regsubsets(like ~ ., WW_LR_data, nvmax = 19)
+regfit.full = regsubsets(like ~ ., ww_data_minmax, nvmax = 19)
 reg.summary = summary(regfit.full)
-plot(reg.summary$rss ,xlab = "Number of Variables ", ylab = "RSS",
-     type = "l") + points(which.min(reg.summary$rss),
-                          reg.summary$rss[which.min(reg.summary$rss)], 
-                          col = "red", cex = 2, pch = 20)
 
-plot(reg.summary$adjr2 ,xlab = "Number of Variables ", 
-     ylab = "Adjusted RSq", type = "l") + points(which.max(reg.summary$adjr2), 
-                                  reg.summary$adjr2[which.max(reg.summary$adjr2)], 
-                                  col = "red", cex = 2, pch = 20)
-
-plot(reg.summary$cp ,xlab = "Number of Variables ", ylab = "Cp", 
-     type = "l" ) + points(which.min(reg.summary$cp), 
-                           reg.summary$cp[which.min(reg.summary$cp)], col = "red", 
-                           cex = 2, pch = 20)
-
-plot(reg.summary$bic ,xlab = "Number of Variables ", ylab = "BIC", 
-     type = "l") + points(which.min(reg.summary$bic), 
-                    reg.summary$bic[which.min(reg.summary$bic)], col = "red", 
-                    cex = 2, pch = 20)
-
-plot(regfit.full ,scale="r2")
-plot(regfit.full ,scale="adjr2")
-plot(regfit.full ,scale="Cp")
-plot(regfit.full ,scale="bic")
-reg.summary$bic
+which.min(reg.summary$bic)
 
 ```
 
 # Forward and Backward Stepwise Selection
 ## Produced same results as Best Subset Selection for minimum BIC
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 regfit.fwd = regsubsets(like ∼ ., data = WW_LR_data , nvmax = 11, method ="forward")
 coef(regfit.fwd, 6)
 
@@ -75,7 +62,7 @@ coef(regfit.full, 6)
 ```
 
 # Cross Validation
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 set.seed(1)
 train = sample(c(1, 0), nrow(WW_LR_data), rep = TRUE)
 test = (!train)
@@ -96,7 +83,6 @@ val.errors = rep(NA, 11)
   #val.errors[i] = mean((pred - WW_LR_data[test,])^2)
   #print(val.errors)
 #}
-
 #val.errors
 ```
 
@@ -132,14 +118,14 @@ mean(WW.LR.pred==w_test$like)
 ## First model shrunk w/ with significant variables only while training on a 80% subset of the original dataset and tested on the remaining 20%
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.fit2 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
-                density + pH + sulphates + alcohol, data = w_train, family = binomial)
+                density + pH + sulphates + alcohol, data = w_dat_stand, family = binomial)
 #summary(LR.fit2)
 #plot(LR.fit2)
 LR.probs2 = predict(LR.fit2, w_test, type = "response")
-LR.pred2 = rep(0, 980)
+LR.pred2 = rep(0, 4898)
 LR.pred2[LR.probs2>0.5] = 1
-table(LR.pred2, w_test$like)
-mean(LR.pred2==w_test$like)
+table(LR.pred2, w_dat_stand$like)
+mean(LR.pred2==w_dat_stand$like)
 #0.74989 Initial probability trained with full dataset
 ```
 
@@ -158,23 +144,20 @@ mean(LR.pred3==w_test$like)
 #0.7523 Initial probability trained with full dataset
 ```
 
-
-
 # Fourth Model
 ## Minimal BIC Model
 ## Same as Second Model
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 LR.BIC7 = glm(like ~ volatile.acidity + residual.sugar + free.sulfur.dioxide + 
-                density + pH + sulphates + alcohol , data = WW_LR_data, family =
+                density + pH + sulphates + alcohol , data = w_dat_minmax, family =
                 binomial)
 #summary(LR.fit4)
 #plot(LR.fit4)
 LR.probs4 = predict(LR.BIC7, type = "response")
 LR.pred4 = rep(0, 4898)
 LR.pred4[LR.probs4>0.5] = 1
-table(LR.pred4, WW_LR_data$like)
-mean(LR.pred4==WW_LR_data$like)
-#0.7498
+table(LR.pred4, w_dat_minmax$like)
+mean(LR.pred4==w_dat_minmax$like)
 ```
 
 # Fifth Model
