@@ -51,8 +51,7 @@ for i in range(n):
     else:
         Y[i] = 0
     for j in range(d-1):
-        if j != 10 and j != 15:
-            X[i,j] = float(data[i][j])
+        X[i,j] = float(data[i][j])
 
 num_good = np.sum(Y)
 
@@ -67,18 +66,43 @@ print('Features: ', features)
 print('Data: ', X_train[0:5,:])
 print('Labels: ', Y[0:5])
 
+#work on normalizing data
+
+from sklearn import preprocessing
+
+std_scale = preprocessing.StandardScaler().fit(X_train)
+X_train_std = std_scale.transform(X_train)
+X_test_std = std_scale.transform(X_test)
         
 
-SVC_clf.fit(X_train, Y_train)
+SVC_clf.fit(X_train_std, Y_train)
 
+#specificity / sensitivity
+#false positive rate
+
+'''
 SVC_prediction = SVC_clf.predict(X_test)
 print(SVC_prediction)
-
+print(np.sum(Y_test))
+print(np.sum(SVC_prediction))
 print(accuracy_score(SVC_prediction, Y_test))
 print(precision_score(SVC_prediction, Y_test))
 print(recall_score(SVC_prediction, Y_test))
 print(confusion_matrix(SVC_prediction, Y_test))
 print(classification_report(SVC_prediction, Y_test))
+'''
+
+
+SVC_prediction = SVC_clf.predict(X_test_std)
+print(SVC_prediction)
+print(np.sum(Y_test))
+print(np.sum(SVC_prediction))
+print(accuracy_score(SVC_prediction, Y_test))
+print(precision_score(SVC_prediction, Y_test))
+print(recall_score(SVC_prediction, Y_test))
+print(confusion_matrix(SVC_prediction, Y_test))
+print(classification_report(SVC_prediction, Y_test))
+
 
 
 
