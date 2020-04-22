@@ -1,0 +1,75 @@
+---
+title: "Graphing with Scaled Data"
+author: "Calvin Skalla"
+date: "4/22/2020"
+output: html_document
+---
+
+# Loading packages and importing/cleaning the data
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(GGally)
+
+#Reading in the Data
+white <- read.csv("data/winequality-white.csv", sep = ";")
+red <- read.csv("data/winequality-red.csv", sep = ";")
+
+#Combining and Clarifying Type
+wine_data <- rbind(white, red) %>% tibble::rowid_to_column("ID") %>% mutate(Type = ifelse(ID <= 4898, 1, 0)) %>% select(-ID)
+
+#Making quality a factor for easier visualization
+wine_data$quality <- as.factor(wine_data$quality)
+
+#normalizing data
+preproc2 <- preProcess(wine_data, method = c("range"))
+w_data_minmax <- predict(preproc2, wine_data)
+
+#Subsetting dataset for easier visualizations
+twentypercent <- sample_frac(w_data_minmax, size = 0.20)
+```
+
+#Scatterplot Matrices for Correlations
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cor(x = w_data_minmax[,1:11], y = as.numeric(w_data_minmax$quality))
+#Scatterplot Matrix demonstrating correlation between predictor variables
+ggpairs(data = w_data_minmax, columns = c("volatile.acidity", "citric.acid", "chlorides", "free.sulfur.dioxide", "density", "alcohol"), lower = list(continuous = wrap("points", size = 1)))
+```
+
+# Chemical Distributions for each Quality
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Violin Plots showing the distributions for each variable over the qualities
+fixed.acidity <- ggplot(twentypercent, aes(x = quality, y = fixed.acidity)) + geom_violin() + coord_flip()
+
+volatile.acidity <- ggplot(twentypercent, aes(x = quality, y = volatile.acidity)) + geom_violin() + coord_flip()
+
+citric.acid <- ggplot(twentypercent, aes(x = quality, y = citric.acid)) + geom_violin() + coord_flip()
+
+residual.sugar <- ggplot(twentypercent, aes(x = quality, y = residual.sugar)) + geom_violin() + coord_flip()
+
+chlorides <- ggplot(twentypercent, aes(x = quality, y = chlorides)) + geom_violin() + coord_flip()
+
+free.sulfur.dioxide <- ggplot(twentypercent, aes(x = quality, y = free.sulfur.dioxide)) + geom_violin() + coord_flip()
+
+total.sulfur.dioxide <- ggplot(twentypercent, aes(x = quality, y = total.sulfur.dioxide)) + geom_violin() + coord_flip()
+
+density <- ggplot(twentypercent, aes(x = quality, y = density)) + geom_violin() + coord_flip()
+
+pH <- ggplot(twentypercent, aes(x = quality, y = pH)) + geom_violin() + coord_flip()
+
+sulphates <- ggplot(twentypercent, aes(x = quality, y = sulphates)) + geom_violin() + coord_flip()
+
+#Effective
+alcohol <- ggplot(twentypercent, aes(x = quality, y = alcohol)) + geom_violin() + coord_flip()
+alcohol
+```
+
+# Coplots
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+p1 <- ggplot(twentypercent, aes(quality, citric.acid)) +
+    geom_point(size = 0.5) +
+    facet_wrap(~cut_width(alcohol, width = 0.10, center = 0)) + geom_smooth()
+p1
+```
+

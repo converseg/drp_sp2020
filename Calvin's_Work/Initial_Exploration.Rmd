@@ -78,6 +78,8 @@ ggplot(white_wine, aes(x = quality, y = density)) + geom_point(alpha = 1/10, pos
 
 alcohol_summary <- white_wine %>% group_by(quality) %>% summarise(alcohol = mean(alcohol))
 ggplot(white_wine, aes(x = quality, y = alcohol)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2)) + geom_line(data = alcohol_summary, size = 2) + geom_point(data = alcohol_summary, size = 4, color = "maroon")
+
+alcohol_summary
 ```
 
 # Density Ridges Graphs

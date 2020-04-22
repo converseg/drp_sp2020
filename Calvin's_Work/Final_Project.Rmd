@@ -1,0 +1,22 @@
+---
+title: "Final Project"
+author: "Calvin Skalla"
+date: "4/22/2020"
+output: html_document
+---
+
+# Explaining the data
+```{r}
+
+```
+
+# Explaining the Correlations between Predictor Variables and our Response
+```{r}
+
+```
+
+# Scatterplots to demonstrate the strengths of the Correlations
+```{r}
+
+```
+
