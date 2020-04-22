@@ -60,8 +60,7 @@ ggplot(wine_data) + geom_density(aes(x = alcohol)) + facet_wrap(~Quality)
 ```
 
 Quality ~ volatile.acidity + residual.sugar + alcohol
-#  geom_point & geom_line
-## White wine
+# EFFECTIVE
 ```{r, echo=FALSE, message=FALSE, include=FALSE}
 fix_acid_summary <- white_wine %>% group_by(quality) %>% summarise(fixed.acidity = mean(fixed.acidity))
 

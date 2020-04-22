@@ -43,18 +43,21 @@ ggpairs(data = w_data_minmax, columns = c("volatile.acidity", "citric.acid", "ch
 fixed.acidity <- ggplot(twentypercent, aes(x = quality, y = fixed.acidity)) + geom_violin() + coord_flip()
 
 volatile.acidity <- ggplot(twentypercent, aes(x = quality, y = volatile.acidity)) + geom_violin() + coord_flip()
+volatile.acidity
 
 citric.acid <- ggplot(twentypercent, aes(x = quality, y = citric.acid)) + geom_violin() + coord_flip()
 
 residual.sugar <- ggplot(twentypercent, aes(x = quality, y = residual.sugar)) + geom_violin() + coord_flip()
 
 chlorides <- ggplot(twentypercent, aes(x = quality, y = chlorides)) + geom_violin() + coord_flip()
+chlorides
 
 free.sulfur.dioxide <- ggplot(twentypercent, aes(x = quality, y = free.sulfur.dioxide)) + geom_violin() + coord_flip()
 
 total.sulfur.dioxide <- ggplot(twentypercent, aes(x = quality, y = total.sulfur.dioxide)) + geom_violin() + coord_flip()
 
 density <- ggplot(twentypercent, aes(x = quality, y = density)) + geom_violin() + coord_flip()
+density
 
 pH <- ggplot(twentypercent, aes(x = quality, y = pH)) + geom_violin() + coord_flip()
 
