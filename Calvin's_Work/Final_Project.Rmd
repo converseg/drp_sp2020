@@ -12,6 +12,8 @@ library(ggplot2)
 library(caret)
 library(kableExtra)
 library(cowplot)
+library(ggthemes)
+library(ggridges)
 
 #Reading in the Data
 white <- read.csv("data/winequality-white.csv", sep = ";")
@@ -22,6 +24,8 @@ wine <- rbind(white, red) %>% tibble::rowid_to_column("ID") %>% mutate(Type = if
 
 #Making quality a factor for easier visualization
 wine$quality <- as.factor(wine$quality)
+
+#Finding Outliers and Removing them
 
 #normalizing data
 preproc2 <- preProcess(wine, method = c("range"))
@@ -50,14 +54,14 @@ Variable               Description
 ***
 
  <details>
-  <summary> Correlation of each variable with Quality </summary>
+  <summary> Click here to expand the correlation of each variable with Quality </summary>
 ```{r, echo=FALSE, message=FALSE}
 #Correlation of Variables Table
 cor_seq <- cor(x = wine_minmax[,1:11], y = as.numeric(wine_minmax$quality))
 colnames(cor_seq) = c("Correlation")
 variables = c("Fixed Acidity", "Volatile Acidity", "Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfites", "Alcohol")
 
-levels_of_significance = c("NSF", "(- -)", "NSF", "NSF", "(- -)", "NSF", "NSF", "(- - -)", "NSF", "NSF", "(+++)")
+levels_of_significance = c("NSF", "(- -)", "(+)", "NSF", "(- -)", "NSF", "NSF", "(- - -)", "NSF", "NSF", "(+++)")
 
 cor_data_frame <- data.frame("Variables" = variables, "Correlation" = cor_seq, "Significance" = levels_of_significance)
 cor_data_frame <- cor_data_frame[order(-cor_data_frame$Correlation),]
@@ -67,28 +71,61 @@ cor_kbl
 ```
 </details>
 
-# Scatterplots to Demonstrate the Correlations
+# Scatterplots to Demonstrate the Correlations of the Five Strongest Predictors
+## Cannot figure out why geom_line() wont graph
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #Showing alcohol levels against quality
 alcohol_summary <- twentypercent %>% group_by(quality) %>% summarise(alcohol = mean(alcohol))
 
-alcohol_scp <- ggplot(twentypercent, aes(x = quality, y = alcohol)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = alcohol_summary, size = 2, color = "yellow") + geom_point(data = alcohol_summary, size = 4, color = "yellow")
+alcohol_scp <- ggplot(twentypercent, aes(x = quality, y = alcohol)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = alcohol_summary, aes(quality, alcohol), size = 2) + geom_point(data = alcohol_summary, size = 2, color = "yellow")
 
 #Showing density levels against quality
 density_summary <- twentypercent %>% group_by(quality) %>% summarise(density = mean(density))
 
-density_scp <- ggplot(twentypercent, aes(x = quality, y = density)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = density_summary, size = 2, color = "yellow") + geom_point(data = density_summary, size = 4, color = "yellow")
+density_scp <- ggplot(twentypercent, aes(x = quality, y = density)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = density_summary, size = 2, color = "yellow") + geom_point(data = density_summary, size = 2, color = "yellow")
 
 #Showing volatile.acidity against quality
 volatile_acidity_summary <- twentypercent %>% group_by(quality) %>% summarise(volatile.acidity = mean(volatile.acidity))
 
-volatile_acidity_scp <- ggplot(twentypercent, aes(x = quality, y = volatile.acidity)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = volatile_acidity_summary) + geom_point(data = volatile_acidity_summary, size = 4, color = "yellow")
+volatile_acidity_scp <- ggplot(twentypercent, aes(x = quality, y = volatile.acidity)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = volatile_acidity_summary) + geom_point(data = volatile_acidity_summary, size = 2, color = "yellow")
 
 #Showing chlorides against quality
 chloride_summary <- twentypercent %>% group_by(quality) %>% summarise(chlorides = mean(chlorides))
 
-chlorides_scp <- ggplot(twentypercent, aes(x = quality, y = chlorides)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = chloride_summary, size = 2, color = "yellow") + geom_point(data = chloride_summary, size = 4, color = "yellow")
+chlorides_scp <- ggplot(twentypercent, aes(x = quality, y = chlorides)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = chloride_summary, size = 2, color = "yellow") + geom_point(data = chloride_summary, size = 2, color = "yellow")
 
-plot_grid(alcohol_scp, density_scp, volatile_acidity_scp, chlorides_scp, ncol = 2, nrow = 2)
+#Showing citric acid against quality
+citric_acid_summary <- twentypercent %>% group_by(quality) %>% summarise(citric.acid = mean(citric.acid))
+
+citric_acid_scp <- ggplot(twentypercent, aes(x = quality, y = citric.acid)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2), color = "blue3") + geom_line(data = citric_acid_summary, size = 2) + geom_point(data = citric_acid_summary, size = 2, color = "yellow")
+
+#Plotting all 5 plots nicely on a grid
+plot_grid(alcohol_scp, density_scp, volatile_acidity_scp, chlorides_scp, citric_acid_scp, ncol = 2, nrow = 3)
+```
+
+# Use a Quality Cut to show differences in more varying qualities
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+```
+
+# Use Violin Plots or Density Ridges to show distributions over quality for Non-significant variables
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#Density Ridge plots for the three negative non-significant predictors
+fixed_acidity_dens <- ggplot(wine_minmax) + geom_density_ridges(aes(x = fixed.acidity, y = quality))
+
+total_sulfur_dio_dens <- ggplot(wine_minmax) + geom_density_ridges(aes(x = total.sulfur.dioxide, y = quality))
+
+residual_sugar_dens <- ggplot(wine_minmax) + geom_density_ridges(aes(x = residual.sugar, y = quality))
+
+plot_grid(fixed_acidity_dens, total_sulfur_dio_dens, residual_sugar_dens, ncol = 2, nrow = 2)
+
+# Violin plots for the three positive non-significant predictors
+free_sulfur_dio_vio <- ggplot(twentypercent, aes(x = quality, y = free.sulfur.dioxide)) + geom_violin() + coord_flip()
+
+sulphates_vio <- ggplot(twentypercent, aes(x = quality, y = sulphates)) + geom_violin() + coord_flip()
+
+pH_vio <- ggplot(twentypercent, aes(x = quality, y = pH)) + geom_violin() + coord_flip()
+
+plot_grid(pH_vio, sulphates_vio, free_sulfur_dio_vio, ncol = 2, nrow = 2)
 ```
 
