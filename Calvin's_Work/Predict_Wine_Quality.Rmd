@@ -19,6 +19,7 @@ library(readr)
 library(GGally)
 library(mlbench)
 library(caret)
+library(glmnet)
 
 #Reading in Data
 white_wine <- read.csv("data/winequality-white.csv", sep = ";")
@@ -44,21 +45,21 @@ library(leaps)
 regfit.full = regsubsets(like ~ ., ww_data_minmax, nvmax = 19)
 reg.summary = summary(regfit.full)
 
-which.min(reg.summary$bic)
+reg.summary$bic
 
 ```
 
 # Forward and Backward Stepwise Selection
 ## Produced same results as Best Subset Selection for minimum BIC
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-regfit.fwd = regsubsets(like ∼ ., data = WW_LR_data , nvmax = 11, method ="forward")
+regfit.fwd = regsubsets(like ~ ., data = ww_data_minmax , nvmax = 11, method ="forward")
 coef(regfit.fwd, 6)
 
-regfit.bwd = regsubsets(like ∼ ., data = WW_LR_data , nvmax = 11, method ="backward")
+regfit.bwd = regsubsets(like ~ ., data = ww_data_minmax , nvmax = 11, method ="backward")
 
-coef(regfit.bwd, 6)
+coef(regfit.bwd, 7)
 
-coef(regfit.full, 6)
+coef(regfit.full, 7)
 ```
 
 # Cross Validation
@@ -151,6 +152,23 @@ LR.pred4[LR.probs4>0.5] = 1
 table(LR.pred4, w_test$like)
 mean(LR.pred4==w_test$like)
 ```
+
+# Ridge Regression on Fourth Model
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+x = model.matrix(like ~ ., ww_data_minmax)[,-1]
+y = ifelse(ww_data_minmax$like == 1, 1, 0)
+
+grid = 10 ^ seq(10, -2, length = 100)
+ridge_mod = glmnet(x, y, alpha = 0, family = "binomial", lambda = grid)
+
+plot(ridge_mod)
+
+lambda_1se <- ridge_mod$lambda.1se
+
+coef(ridge_mod, s=lambda_1se)
+```
+
 
 # Fifth Model
 ## Second Lowest BIC Model

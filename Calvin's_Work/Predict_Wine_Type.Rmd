@@ -106,25 +106,57 @@ table(second_pred, test$Type)
 mean(second_pred==test$Type)
 ```
 
-# Third Model
-### Type ~ total.sulfur.dioxide
+# Singular Models
+### Type ~ total.sulfur.dioxide | Type ~ chlorides | Type ~ volatile.acidity
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-third_mod = glm(Type ~ total.sulfur.dioxide, data = train, family = binomial)
+sing1_mod = glm(Type ~ total.sulfur.dioxide, data = train, family = binomial)
 
-#summary(third_mod)
-third_probs = predict(third_mod, test, type = "response")
-third_pred = rep(0, 1300)
-third_pred[third_probs>0.5] = 1
-table(third_pred, test$Type)
-mean(third_pred==test$Type)
+sing1_probs = predict(sing1_mod, test, type = "response")
+sing1_pred = rep(0, 1300)
+sing1_pred[sing1_probs>0.5] = 1
+table(sing1_pred, test$Type)
+mean(sing1_pred==test$Type)
+
+sing2_mod = glm(Type ~ chlorides, data = train, family = binomial)
+
+sing2_probs = predict(sing2_mod, test, type = "response")
+sing2_pred = rep(0, 1300)
+sing2_pred[sing2_probs>0.5] = 1
+table(sing2_pred, test$Type)
+mean(sing2_pred==test$Type)
+
+sing3_mod = glm(Type ~ volatile.acidity, data = train, family = binomial)
+
+sing3_probs = predict(sing3_mod, test, type = "response")
+sing3_pred = rep(0, 1300)
+sing3_pred[sing3_probs>0.5] = 1
+table(sing3_pred, test$Type)
+mean(sing3_pred==test$Type)
+
 ```
 
-# Visualization of Model 3
+# Visualization of Singular Models
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-ggplot(train, aes(x = total.sulfur.dioxide, y = Type)) +
+tsd_lr <- ggplot(train, aes(x = total.sulfur.dioxide, y = Type, color = alcohol)) +
   geom_point() +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   ggtitle("Logistic regression model fit") +
   xlab("Total Sulfur Dioxide Levels") +
   ylab("Type of Wine")
+
+c_lr <- ggplot(train, aes(x = chlorides, y = Type, color = alcohol)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  ggtitle("Logistic regression model fit") +
+  xlab("Chloride Levels") +
+  ylab("Type of Wine")
+
+va_lr <- ggplot(train, aes(x = volatile.acidity, y = Type, color = alcohol)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  ggtitle("Logistic regression model fit") +
+  xlab("Volatile Acidity Levels") +
+  ylab("Type of Wine")
+
+plot_grid(tsd_lr, c_lr, va_lr, ncol = 2, nrow = 2)
 ```
