@@ -28,6 +28,38 @@ red_wine <- read.csv("data/winequality-red.csv", sep = ";")
 #Combining and clarifying the red vs white
 wine_data <- rbind(white_wine, red_wine) %>% tibble::rowid_to_column("ID") %>% mutate(Type = ifelse(ID <= 4898, 1, 0)) %>% select(-ID)
 
+#Eliminating Outliers
+#Fixed Acidity Outliers
+#fa_outliers <- boxplot(wine_data$fixed.acidity)$out
+#wine_data <- wine_data[-which(wine_data$fixed.acidity %in% fa_outliers),]
+#Volatile Acidity Outliers
+#va_outliers <- boxplot(wine_data$volatile.acidity)$out
+#wine_data <- wine_data[-which(wine_data$volatile.acidity %in% va_outliers),]
+#Citric Acid Outliers
+#ca_outliers <- boxplot(wine_data$citric.acid)$out
+#wine_data <- wine_data[-which(wine_data$citric.acid %in% ca_outliers),]
+#Residual Sugar Outliers
+#rs_outliers <- boxplot(wine_data$residual.sugar)$out
+#wine_data <- wine_data[-which(wine_data$residual.sugar %in% rs_outliers),]
+#Free SUlfur Dioxide Outliers
+#fsd_outliers <- boxplot(wine_data$free.sulfur.dioxide)$out
+#wine_data <- wine_data[-which(wine_data$free.sulfur.dioxide %in% fsd_outliers),]
+#Total SUlfur Dioxide Outliers
+#tsd_outliers <- boxplot(wine_data$total.sulfur.dioxide)$out
+#wine_data <- wine_data[-which(wine_data$total.sulfur.dioxide %in% tsd_outliers),]
+#Density Outliers
+#d_outliers <- boxplot(wine_data$density)$out
+#wine_data <- wine_data[-which(wine_data$density %in% d_outliers),]
+#pH Outliers
+#pH_outliers <- boxplot(wine_data$pH)$out
+#wine_data <- wine_data[-which(wine_data$pH %in% pH_outliers),]
+#Sulphates Outliers
+#s_outliers <- boxplot(wine_data$sulphates)$out
+#wine_data <- wine_data[-which(wine_data$sulphates %in% s_outliers),]
+#Alcohol Outliers
+#a_outliers <- boxplot(wine_data$alcohol)$out
+#wine_data <- wine_data[-which(wine_data$alcohol %in% a_outliers),]
+
 #normalizing data
 preproc2 <- preProcess(wine_data, method = c("range"))
 w_data_minmax <- predict(preproc2, wine_data)
@@ -37,11 +69,13 @@ train_index <- sample(1:nrow(w_data_minmax), 0.8 * nrow(w_data_minmax))
 test_index <- setdiff(1:nrow(w_data_minmax), train_index)
 train <- w_data_minmax[train_index, ]
 test <- w_data_minmax[test_index, ]
-count(train$Type)
-count(test$Type)
+#count(train$Type)
+#count(test$Type)
+
 ```
 
 # First Model
+### Type ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #All available variables
 first_mod = glm(Type ~ fixed.acidity + volatile.acidity + citric.acid
@@ -49,7 +83,7 @@ first_mod = glm(Type ~ fixed.acidity + volatile.acidity + citric.acid
              + total.sulfur.dioxide + density + pH + sulphates
              + alcohol, data = train, family = binomial)
 
-summary(first_mod)
+#summary(first_mod)
 
 first_probs = predict(first_mod, test, type = "response")
 first_pred = rep(0, 1300)
@@ -59,11 +93,12 @@ mean(first_pred==test$Type)
 ```
 
 # Second Model
+### Type ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + alcohol
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #Only significant variables
-second_mod = glm(Type ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + sulphates + alcohol, data = train, family = binomial)
+second_mod = glm(Type ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + alcohol, data = train, family = binomial)
 
-summary(second_mod)
+#summary(second_mod)
 second_probs = predict(second_mod, test, type = "response")
 second_pred = rep(0, 1300)
 second_pred[second_probs>0.5] = 1
@@ -72,11 +107,11 @@ mean(second_pred==test$Type)
 ```
 
 # Third Model
-```{r}
+### Type ~ total.sulfur.dioxide
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 third_mod = glm(Type ~ total.sulfur.dioxide, data = train, family = binomial)
 
-summary(third_mod)
-
+#summary(third_mod)
 third_probs = predict(third_mod, test, type = "response")
 third_pred = rep(0, 1300)
 third_pred[third_probs>0.5] = 1
@@ -84,3 +119,12 @@ table(third_pred, test$Type)
 mean(third_pred==test$Type)
 ```
 
+# Visualization of Model 3
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(train, aes(x = total.sulfur.dioxide, y = Type)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  ggtitle("Logistic regression model fit") +
+  xlab("Total Sulfur Dioxide Levels") +
+  ylab("Type of Wine")
+```
