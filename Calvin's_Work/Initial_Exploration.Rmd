@@ -60,10 +60,11 @@ ggplot(wine_data) + geom_density(aes(x = alcohol)) + facet_wrap(~Quality)
 ```
 
 Quality ~ volatile.acidity + residual.sugar + alcohol
-#  geom_point & geom_line
-## White wine
+# EFFECTIVE
 ```{r, echo=FALSE, message=FALSE, include=FALSE}
 fix_acid_summary <- white_wine %>% group_by(quality) %>% summarise(fixed.acidity = mean(fixed.acidity))
+
+typeof(white_wine$quality)
 
 ggplot(white_wine, aes(x = quality, y = fixed.acidity)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2)) + geom_line(data = fix_acid_summary, size = 2) + geom_point(data = fix_acid_summary, size = 4, color = "maroon")
 
@@ -78,14 +79,16 @@ ggplot(white_wine, aes(x = quality, y = density)) + geom_point(alpha = 1/10, pos
 
 alcohol_summary <- white_wine %>% group_by(quality) %>% summarise(alcohol = mean(alcohol))
 ggplot(white_wine, aes(x = quality, y = alcohol)) + geom_point(alpha = 1/10, position = position_jitter(height = 0.2, width = 0.2)) + geom_line(data = alcohol_summary, size = 2) + geom_point(data = alcohol_summary, size = 4, color = "maroon")
+
+typeof(alcohol_summary)
 ```
 
 # Density Ridges Graphs
 ## Using quality data
 ```{r, echo=FALSE, message=FALSE}
-gg5 <- ggplot(wine_data) + geom_density_ridges(aes(x = volatile.acidity, y = Quality))
+ggplot(wine_data) + geom_density_ridges(aes(x = volatile.acidity, y = Quality))
 
-gg6 <- ggplot(wine_data) + geom_density_ridges(aes(x = alcohol, y = Quality))
+ggplot(wine_data) + geom_density_ridges(aes(x = alcohol, y = Quality))
 
 ggplot(wine_data) + geom_density_ridges(aes(x = residual.sugar, y = Quality))
 
