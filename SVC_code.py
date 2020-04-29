@@ -103,6 +103,23 @@ print(recall_score(SVC_prediction, Y_test))
 print(confusion_matrix(SVC_prediction, Y_test))
 print(classification_report(SVC_prediction, Y_test))
 
+from sklearn.svm import SVR
+clf = SVR()
+clf.fit(X_train_std, Y_train)
+
+prediction = clf.predict(X_test_std)
+index = 0
+while index < len(prediction):
+    if prediction[index] > .5:
+        prediction[index] = 1
+    else:
+        prediction[index] = 0
+    index = index + 1
+print(prediction)
+print(accuracy_score(prediction, Y_test))
+#print(confusion_matrix(prediction, Y_test))
+
+#print(accuracy_score(prediction, Y_test))
 
 
 
