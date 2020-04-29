@@ -71,7 +71,7 @@ alcohol
 
 # Coplots
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-density_alcohol <- ggplot(wine_minmax, aes(alcohol, density)) +
+density_alcohol <- ggplot(w_data_minmax, aes(alcohol, density)) +
     geom_point(size = 0.5, color = "lightgrey") +
     facet_wrap(~cut_width(quality, width = 2, center = 5)) +
     geom_smooth()
